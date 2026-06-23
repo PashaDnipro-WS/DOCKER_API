@@ -15,7 +15,10 @@
     "clear-db:prod": "cross-env NODE_ENV=production npx sequelize-cli db:seed:undo:all",
     "migrate:prod": "cross-env NODE_ENV=production npx sequelize-cli db:migrate",
     "migrate:dev": "cross-env NODE_ENV=development npx sequelize-cli db:migrate",
-    "reset-db:dev": "cross-env NODE_ENV=development npx sequelize-cli db:migrate:undo:all && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all"
+    "reset-db:dev": "cross-env NODE_ENV=development npx sequelize-cli db:migrate:undo:all && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all",
+    "test:api": "docker compose --profile ci up --build --abort-on-container-exit --exit-code-from test && docker compose --profile ci down -v",
+    "test:e2e": "docker compose --profile e2e up --build --abort-on-container-exit --exit-code-from playwright && docker compose --profile e2e down -v",
+    "docker:dev": "docker compose --profile dev up --build"
   },
   "keywords": [
     "express",
