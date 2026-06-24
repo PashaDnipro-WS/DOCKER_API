@@ -26,6 +26,15 @@ jobs:
         run: |
           docker compose --profile ci up --abort-on-container-exit --exit-code-from test
 
+      - name: Cleanup Docker Compose
+        if: always()
+        run: |
+          if [ -f ".env" ]; then
+            docker compose --profile ci down -v
+          else
+            echo ".env file not found, skipping docker compose cleanup"
+          fi
+
       - name: Remove node_modules created by Docker
         if: always()
         run: |
@@ -85,8 +94,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
           commit_message: 'Deploy test reports and documentation'
-
-      - name: Cleanup
-        if: always()
-        run: |
-          docker compose --profile ci down -v
