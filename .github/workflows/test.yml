@@ -17,23 +17,37 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Check environment files
+      - name: Setup environment files
         run: |
-          test -f .env
-          test -f .env.test
+          cp .env.ci .env
+          cp .env.test.ci .env.test
+          cp .env.e2e.ci .env.e2e
+          cp frontend/.env.ci frontend/.env
 
-      - name: Run tests with Docker Compose
+      - name: Run API tests with Docker Compose
         run: |
           docker compose --profile ci up --abort-on-container-exit --exit-code-from test
 
-      - name: Cleanup Docker Compose
+      - name: Cleanup API test containers
         if: always()
         run: |
-          if [ -f ".env" ]; then
-            docker compose --profile ci down -v
-          else
-            echo ".env file not found, skipping docker compose cleanup"
-          fi
+          docker compose --profile ci down -v || true
+
+      - name: Run Playwright UI tests with Docker Compose
+        run: |
+          rm -rf frontend/allure-results
+          docker compose --profile e2e up --build --abort-on-container-exit --exit-code-from playwright playwright
+
+      - name: Cleanup UI test containers
+        if: always()
+        run: |
+          docker compose --profile e2e down -v || true
+
+      - name: Debug Allure results
+        if: always()
+        run: |
+          echo "Allure results:"
+          find frontend/allure-results -maxdepth 2 -type f | head -30 || true
 
       - name: Remove node_modules created by Docker
         if: always()
@@ -53,7 +67,7 @@ jobs:
         run: |
           mkdir -p public/allure
 
-          if [ -d "frontend/allure-results" ]; then
+          if [ -d "frontend/allure-results" ] && [ "$(ls -A frontend/allure-results)" ]; then
             npx --yes allure-commandline generate frontend/allure-results --clean -o public/allure
           else
             echo "No Allure results found"
