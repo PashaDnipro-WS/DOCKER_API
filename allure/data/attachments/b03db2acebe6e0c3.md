@@ -1,0 +1,66 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: auth.spec.js >> Auth >> user can login with valid credentials
+- Location: e2e/tests/auth.spec.js:4:3
+
+# Error details
+
+```
+Error: expect(locator).toBeVisible() failed
+
+Locator: getByRole('heading', { name: 'Sign in to Employee Management' })
+Expected: visible
+Timeout: 5000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 5000ms
+  - waiting for getByRole('heading', { name: 'Sign in to Employee Management' })
+
+```
+
+```yaml
+- text: "Blocked request. This host (\"frontend\") is not allowed. To allow this host, add \"frontend\" to `server.allowedHosts` in vite.config.js."
+```
+
+# Test source
+
+```ts
+  1  | import { expect } from '@playwright/test';
+  2  | 
+  3  | export class LoginPage {
+  4  |   constructor(page) {
+  5  |     this.page = page;
+  6  |     this.emailInput = page.getByLabel('Email');
+  7  |     this.passwordInput = page.getByLabel('Password');
+  8  |     this.signInButton = page.getByRole('button', { name: 'Sign in' });
+  9  | 
+  10 |     this.heading = page.getByRole('heading', { name: 'Sign in to Employee Management' })
+  11 |   }
+  12 | 
+  13 |   async goto() {
+  14 |     await this.page.goto('/login');
+  15 |   }
+  16 | 
+  17 |   async expectOpened() {
+> 18 |     await expect(this.heading).toBeVisible();
+     |                                ^ Error: expect(locator).toBeVisible() failed
+  19 |     await expect(this.emailInput).toBeVisible();
+  20 |     await expect(this.passwordInput).toBeVisible();
+  21 |     await expect(this.signInButton).toBeVisible();
+  22 |   }
+  23 | 
+  24 |   async login(email, password) {
+  25 |     await this.emailInput.fill(email);
+  26 |     await this.passwordInput.fill(password);
+  27 |     await this.signInButton.click();
+  28 |   }
+  29 | 
+  30 | }
+```
