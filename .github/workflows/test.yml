@@ -21,6 +21,8 @@ jobs:
         run: |
           cp .env.ci .env
           cp .env.test.ci .env.test
+          cp .env.e2e.ci .env.e2e
+          cp frontend/.env.ci frontend/.env
 
       - name: Run API tests with Docker Compose
         run: |
@@ -31,35 +33,21 @@ jobs:
         run: |
           docker compose --profile ci down -v || true
 
-      - name: Start app for UI tests
+      - name: Run Playwright UI tests with Docker Compose
         run: |
-          docker compose --profile e2e up --build -d db app frontend
-
-      - name: Set up Node.js for UI tests
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: npm ci
-
-      - name: Install Playwright browsers
-        working-directory: frontend
-        run: npx playwright install --with-deps chromium
-
-      - name: Run Playwright UI tests
-        working-directory: frontend
-        run: npm run test:e2e
-        env:
-          BASE_URL: http://localhost:5173
+          rm -rf frontend/allure-results
+          docker compose --profile e2e up --build --abort-on-container-exit --exit-code-from playwright playwright
 
       - name: Cleanup UI test containers
         if: always()
         run: |
           docker compose --profile e2e down -v || true
+
+      - name: Debug Allure results
+        if: always()
+        run: |
+          echo "Allure results:"
+          find frontend/allure-results -maxdepth 2 -type f | head -30 || true
 
       - name: Remove node_modules created by Docker
         if: always()
@@ -78,9 +66,6 @@ jobs:
         if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           mkdir -p public/allure
-
-          echo "Checking Allure results..."
-          find frontend/allure-results -maxdepth 2 -type f | head -20 || true
 
           if [ -d "frontend/allure-results" ] && [ "$(ls -A frontend/allure-results)" ]; then
             npx --yes allure-commandline generate frontend/allure-results --clean -o public/allure

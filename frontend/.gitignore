@@ -22,3 +22,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+# Environment files
+.env
+.env.*
+frontend/.env
+frontend/.env.*
+
+!.env.ci
+!.env.test.ci
+!.env.e2e.ci
+!frontend/.env.ci
