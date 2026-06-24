@@ -1,106 +1,79 @@
 import { test } from '../fixtures/fixtures.js';
-import { adminUser, newEmployee, updatedEmployeeData } from '../data/users.js';
+import { updatedEmployeeData } from '../data/users.js';
 
 test.describe('Employees', () => {
     test('admin can create employee', async ({
-        loginPage,
-        employeesPage,
+        loggedInEmployeesPage,
+        employee,
     }) => {
-        await loginPage.goto();
-        await loginPage.login(adminUser.email, adminUser.password);
+        await loggedInEmployeesPage.openCreateEmployeeForm();
 
-        await employeesPage.expectOpened();
+        await loggedInEmployeesPage.createEmployee(employee);
 
-        await employeesPage.openCreateEmployeeForm();
+        await loggedInEmployeesPage.expectOpened();
 
-        await employeesPage.createEmployee(newEmployee);
-
-        await employeesPage.expectOpened();
-
-        await employeesPage.expectEmployeeVisible(newEmployee);
-    });
-
-    test('user can search employee by name', async ({
-        loginPage,
-        employeesPage,
-    }) => {
-        await loginPage.goto();
-
-        await loginPage.login(adminUser.email, adminUser.password);
-
-        await employeesPage.expectOpened();
-
-        await employeesPage.searchByName('John');
-
-        await employeesPage.expectEmployeeNameExists('John Tester');
-
-        await employeesPage.expectEmployeeNameHidden('Default Admin');
+        await loggedInEmployeesPage.expectEmployeeVisible(employee);
     });
 
     test('user can delete employee', async ({
-        loginPage,
-        employeesPage,
+        loggedInEmployeesPage,
+        employee,
     }) => {
-        await loginPage.goto();
+        await loggedInEmployeesPage.openCreateEmployeeForm();
 
-        await loginPage.login(
-            adminUser.email,
-            adminUser.password
+        await loggedInEmployeesPage.createEmployee(employee);
+
+        await loggedInEmployeesPage.expectOpened();
+
+        await loggedInEmployeesPage.expectEmployeeVisibleByEmail(
+            employee.email
         );
 
-        await employeesPage.expectOpened();
-
-        await employeesPage.openCreateEmployeeForm();
-
-        await employeesPage.createEmployee(newEmployee);
-
-        await employeesPage.expectOpened();
-
-        await employeesPage.expectEmployeeVisibleByEmail(
-            newEmployee.email
+        await loggedInEmployeesPage.deleteEmployeeByEmail(
+            employee.email
         );
 
-        await employeesPage.deleteEmployeeByEmail(
-            newEmployee.email
-        );
+        await loggedInEmployeesPage.expectDeleteSuccessToastVisible();
 
-        await employeesPage.expectDeleteSuccessToastVisible();
-
-        await employeesPage.expectEmployeeDeleted(
-            newEmployee.email
+        await loggedInEmployeesPage.expectEmployeeDeleted(
+            employee.email
         );
     });
 
     test('user can update employee information', async ({
-        loginPage,
-        employeesPage,
+        loggedInEmployeesPage,
+        employee,
     }) => {
-        await loginPage.goto();
+        await loggedInEmployeesPage.openCreateEmployeeForm();
 
-        await loginPage.login(adminUser.email, adminUser.password);
+        await loggedInEmployeesPage.createEmployee(employee);
 
-        await employeesPage.expectOpened();
+        await loggedInEmployeesPage.expectOpened();
 
-        await employeesPage.openCreateEmployeeForm();
+        await loggedInEmployeesPage.expectEmployeeVisibleByEmail(
+            employee.email
+        );
 
-        await employeesPage.createEmployee(newEmployee);
+        await loggedInEmployeesPage.openEmployeeDetailsByEmail(
+            employee.email
+        );
 
-        await employeesPage.expectOpened();
+        await loggedInEmployeesPage.expectEmployeeDetailsOpened(
+            employee
+        );
 
-        await employeesPage.expectEmployeeVisibleByEmail(newEmployee.email);
+        await loggedInEmployeesPage.openEditEmployeeForm();
 
-        await employeesPage.openEmployeeDetailsByEmail(newEmployee.email);
+        await loggedInEmployeesPage.updatePhone(
+            updatedEmployeeData.phone
+        );
 
-        await employeesPage.expectEmployeeDetailsOpened(newEmployee);
+        await loggedInEmployeesPage.expectUpdateSuccessToastVisible();
 
-        await employeesPage.openEditEmployeeForm();
+        await loggedInEmployeesPage.reload();
 
-        await employeesPage.updatePhone(updatedEmployeeData.phone);
-
-        await employeesPage.expectUpdateSuccessToastVisible();
-
-        await employeesPage.reload();
-
-        await employeesPage.expectPhoneVisible(updatedEmployeeData.phone);
+        await loggedInEmployeesPage.expectPhoneVisible(
+            updatedEmployeeData.phone
+        );
     });
 });

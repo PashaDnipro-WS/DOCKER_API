@@ -26,4 +26,12 @@ export class Navbar {
   async logout() {
     await this.logoutButton.click();
   }
+
+  async openProjects() {
+    await this.projectsLink.click();
+  }
+
+  async logout() {
+    await this.logoutButton.click();
+  }
 }

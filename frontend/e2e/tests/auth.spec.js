@@ -1,17 +1,20 @@
 import { test, expect } from '../fixtures/fixtures.js';
-import { adminUser, invalidAdminUser } from '../data/users.js';
 
 test.describe('Auth', () => {
   test('user can login with valid credentials', async ({
     page,
     loginPage,
     navbar,
+    admin,
   }) => {
     await loginPage.goto();
 
     await loginPage.expectOpened();
 
-    await loginPage.login(adminUser.email, adminUser.password);
+    await loginPage.login(
+      admin.email,
+      admin.password
+    );
 
     await expect(page).toHaveURL(/employees/);
 
@@ -19,29 +22,67 @@ test.describe('Auth', () => {
 
     await navbar.expectUserVisible();
 
-    const token = await page.evaluate(() => localStorage.getItem('token'));
-    const user = await page.evaluate(() => JSON.parse(localStorage.getItem('user')));
+    const storage = await page.evaluate(() => {
+      return {
+        token: localStorage.getItem('token'),
+        user: JSON.parse(localStorage.getItem('user') || 'null'),
+      };
+    });
 
-    expect(token).toBeTruthy();
-    expect(user.email).toBe(adminUser.email);
+    expect(storage.token).toBeTruthy();
+
+    expect(storage.user).toBeTruthy();
+
+    expect(storage.user.email).toBe(admin.email);
   });
 
   test('user cannot login with invalid credentials', async ({
     page,
     loginPage,
+    invalidAdmin,
   }) => {
     await loginPage.goto();
 
     await loginPage.expectOpened();
 
-    await loginPage.login(invalidAdminUser.email, invalidAdminUser.password);
+    await loginPage.login(
+      invalidAdmin.email,
+      invalidAdmin.password
+    );
 
     await expect(page).toHaveURL(/login/);
 
-    const token = await page.evaluate(() => localStorage.getItem('token'));
-    const user = await page.evaluate(() => localStorage.getItem('user'));
+    const storage = await page.evaluate(() => {
+      return {
+        token: localStorage.getItem('token'),
+        user: localStorage.getItem('user'),
+      };
+    });
+
+    expect(storage.token).toBeNull();
+
+    expect(storage.user).toBeNull();
+  });
+
+  test('user can logout', async ({
+    loggedInEmployeesPage,
+    loginPage,
+    page,
+    navbar,
+  }) => {
+
+    await navbar.logout();
+
+    await loginPage.expectOpened();
+
+    const token = await page.evaluate(() =>
+      localStorage.getItem('token')
+    );
 
     expect(token).toBeNull();
-    expect(user).toBeNull();
+
+    await page.goto('/employees');
+
+    await loginPage.expectOpened();
   });
 });

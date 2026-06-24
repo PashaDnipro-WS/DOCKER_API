@@ -14,7 +14,7 @@ services:
       - /app/node_modules
     command: npm run dev
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/health" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,7 +30,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: my_frontend
     env_file:
-      - .env
+      - ./frontend/.env
     ports:
       - "5173:5173"
     depends_on:
@@ -42,7 +42,7 @@ services:
     profiles:
       - dev
       - e2e
-
+    
   db:
     image: postgres:16
     container_name: my_db
@@ -51,7 +51,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -71,7 +71,7 @@ services:
     volumes:
       - ./:/app
       - /app/node_modules
-    entrypoint: ["/entrypoint-test.sh"]
+    entrypoint: [ "/entrypoint-test.sh" ]
     command: npm run test
     profiles:
       - ci
