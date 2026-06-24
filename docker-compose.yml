@@ -79,7 +79,7 @@ services:
       - ci
 
   playwright:
-    image: mcr.microsoft.com/playwright:v1.53.0-noble
+    image: mcr.microsoft.com/playwright:v1.60.0-noble
     container_name: my_playwright
     working_dir: /app
     env_file:
