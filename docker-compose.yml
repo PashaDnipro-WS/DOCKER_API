@@ -24,26 +24,26 @@ services:
       - ci
       - e2e
 
-    frontend:
-      build:
-        context: ./frontend
-        dockerfile: Dockerfile.dev
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
       container_name: my_frontend
       env_file:
-        - ./frontend/.env
-      environment:
-        VITE_API_URL: http://app:3000
-      ports:
-        - "5173:5173"
-      depends_on:
-        app:
-          condition: service_healthy
-      volumes:
-        - ./frontend:/app
-        - /app/node_modules
-      profiles:
-        - dev
-        - e2e
+      - ./frontend/.env
+    environment:
+       VITE_API_URL: http://app:3000
+    ports:
+      - "5173:5173"
+    depends_on:
+       app:
+        condition: service_healthy
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    profiles:
+      - dev
+      - e2e
     
   db:
     image: postgres:16
