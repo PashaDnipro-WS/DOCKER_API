@@ -28,15 +28,15 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
-      container_name: my_frontend
-      env_file:
+    container_name: my_frontend
+    env_file:
       - ./frontend/.env
     environment:
-       VITE_API_URL: http://app:3000
+      VITE_API_URL: http://app:3000
     ports:
       - "5173:5173"
     depends_on:
-       app:
+      app:
         condition: service_healthy
     volumes:
       - ./frontend:/app
@@ -44,7 +44,7 @@ services:
     profiles:
       - dev
       - e2e
-    
+
   db:
     image: postgres:16
     container_name: my_db
@@ -78,9 +78,6 @@ services:
     profiles:
       - ci
 
-  # Playwright E2E testing service
-  # Note: Requires 'test:e2e' script in frontend/package.json
-  # Add to frontend/package.json: "test:e2e": "playwright test"
   playwright:
     image: mcr.microsoft.com/playwright:v1.53.0-noble
     container_name: my_playwright
