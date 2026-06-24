@@ -17,43 +17,76 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup environment files
+      - name: Check environment files
         run: |
-          cp .env.test.example .env.test
-          cp .env.example .env
+          test -f .env
+          test -f .env.test
 
       - name: Run tests with Docker Compose
         run: |
           docker compose --profile ci up --abort-on-container-exit --exit-code-from test
 
-      - name: Cleanup
-        if: always()
-        run: docker compose --profile ci down -v
-
       - name: Remove node_modules created by Docker
-        if: github.ref == 'refs/heads/main'
-        run: sudo rm -rf node_modules
+        if: always()
+        run: |
+          sudo rm -rf node_modules
+          sudo rm -rf frontend/node_modules
 
-      - name: Set up Node.js (for Swagger build)
-        if: github.ref == 'refs/heads/main'
+      - name: Set up Java for Allure
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Generate Allure report
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p public/allure
+
+          if [ -d "frontend/allure-results" ]; then
+            npx --yes allure-commandline generate frontend/allure-results --clean -o public/allure
+          else
+            echo "No Allure results found"
+            echo "<h1>No Allure results found</h1>" > public/allure/index.html
+          fi
+
+      - name: Set up Node.js for Swagger build
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
 
-      - name: Install dependencies (for Swagger build)
-        if: github.ref == 'refs/heads/main'
+      - name: Install dependencies for Swagger build
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: npm ci
 
       - name: Build Swagger documentation
-        if: github.ref == 'refs/heads/main'
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: npm run build:swagger
 
-      - name: Deploy to GitHub Pages
-        if: github.ref == 'refs/heads/main'
+      - name: Prepare GitHub Pages content
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p public/docs
+
+          if [ -d "docs" ]; then
+            cp -r docs/* public/docs/
+          else
+            echo "No Swagger docs found"
+            echo "<h1>No Swagger docs found</h1>" > public/docs/index.html
+          fi
+
+      - name: Deploy reports to GitHub Pages
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs
-          destination_dir: docs
-          commit_message: 'Deploy Swagger documentation'
+          publish_dir: ./public
+          commit_message: 'Deploy test reports and documentation'
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker compose --profile ci down -v
