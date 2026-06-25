@@ -14,9 +14,9 @@ import {
 import { createProjectData } from '../data/projects.js';
 
 async function loginByApi(request, admin) {
-    const apiURL = process.env.API_URL || 'http://localhost:3000';
+    const baseURL = process.env.BASE_URL || 'http://localhost:5173';
 
-    const response = await request.post(`${apiURL}/login`, {
+    const response = await request.post(`${baseURL}/api/login`, {
         data: {
             email: admin.email,
             password: admin.password,
