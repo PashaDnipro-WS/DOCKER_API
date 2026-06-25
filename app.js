@@ -15,60 +15,58 @@ const morgan = require("morgan");
 const helmet = require("helmet"); // Добавляем helmet
 const cors = require("cors"); // Добавляем CORS
 
-// Middleware
-app.use(express.json());
-
-// Настройка CORS - ДОЛЖНО БЫТЬ ПЕРЕД helmet!
-// Handle CORS_ORIGIN - can be "*", specific URL, or comma-separated list
+// Настройка CORS - ДОЛЖНО БЫТЬ ПЕРЕД helmet, routes и express.json
 const allowedOrigins = (process.env.CORS_ORIGIN && process.env.CORS_ORIGIN.trim())
   ? process.env.CORS_ORIGIN.split(',').map(o => o.trim()).filter(o => o.length > 0)
   : ["*"];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
-    
-    // Allow all origins if CORS_ORIGIN is "*"
+
     if (allowedOrigins.includes("*")) {
       return callback(null, true);
     }
-    
-    // Check if origin is in allowed list or matches pattern
+
     const isAllowed = allowedOrigins.some(allowedOrigin => {
-      // Exact match
       if (allowedOrigin === origin) return true;
-      // Pattern match for wildcard domains (e.g., *.onrender.com)
+
       if (allowedOrigin.startsWith('*.')) {
-        const domain = allowedOrigin.slice(2); // Remove '*.'
-        // Ensure origin is https:// and ends with the domain
+        const domain = allowedOrigin.slice(2);
+
         if (origin.startsWith('https://') && origin.endsWith('.' + domain)) {
-          // Extract hostname from origin (remove https://)
           const hostname = origin.slice(8).split('/')[0];
-          // Ensure exactly one subdomain level (prevent evil.onrender.com.malicious.com)
           const parts = hostname.split('.');
           const domainParts = domain.split('.');
-          // hostname should have exactly one more part than domain
+
           return parts.length === domainParts.length + 1 && hostname.endsWith('.' + domain);
         }
       }
+
       return false;
     });
-    
+
     if (isAllowed) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+      return callback(null, true);
     }
+
+    return callback(new Error('Not allowed by CORS'));
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true, // Allow credentials
+  credentials: true,
   preflightContinue: false,
-  optionsSuccessStatus: 204
+  optionsSuccessStatus: 204,
 };
 
-app.use(cors(corsOptions)); // Используем CORS middleware
+// CORS має стояти найвище
+app.use(cors(corsOptions));
+
+// Явно закриваємо всі OPTIONS preflight-запити
+app.options(/.*/, cors(corsOptions));
+
+// Middleware після CORS
+app.use(express.json());
 
 // Безопасность заголовков с helmet
 app.use(helmet());

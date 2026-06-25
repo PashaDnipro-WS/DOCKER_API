@@ -32,7 +32,8 @@ services:
     env_file:
       - ./frontend/.env
     environment:
-      VITE_API_URL: http://app:3000
+      VITE_API_URL: /api
+      API_PROXY_TARGET: http://app:3000
     ports:
       - "5173:5173"
     depends_on:
@@ -41,8 +42,40 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://localhost:5173/login').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
     profiles:
       - dev
+      - e2e
+
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.60.0-noble
+    container_name: my_playwright
+    working_dir: /app
+    env_file:
+      - .env.e2e
+    environment:
+      BASE_URL: http://frontend:5173
+      API_URL: http://app:3000
+      SECRET_WORD: test_secret_word
+    depends_on:
+      app:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: sh -c "npm ci && npm run test:e2e"
+    profiles:
       - e2e
 
   db:
@@ -77,26 +110,6 @@ services:
     command: npm run test
     profiles:
       - ci
-
-  playwright:
-    image: mcr.microsoft.com/playwright:v1.60.0-noble
-    container_name: my_playwright
-    working_dir: /app
-    env_file:
-      - .env.e2e
-    environment:
-      BASE_URL: http://frontend:5173
-    depends_on:
-      app:
-        condition: service_healthy
-      frontend:
-        condition: service_started
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    command: sh -c "npm ci && npm run test:e2e"
-    profiles:
-      - e2e
 
 volumes:
   db_data:
