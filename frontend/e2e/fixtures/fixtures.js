@@ -30,37 +30,42 @@ export const test = base.extend({
         await use(new ProjectsPage(page));
     },
 
-    admin: async ({}, use) => {
+    admin: async ({ }, use) => {
         await use(adminUser);
     },
 
-    invalidAdmin: async ({}, use) => {
+    invalidAdmin: async ({ }, use) => {
         await use(invalidAdminUser);
     },
 
-    employee: async ({}, use) => {
+    employee: async ({ }, use) => {
         const employee = createEmployeeData();
 
         await use(employee);
     },
 
-    project: async ({}, use) => {
+    project: async ({ }, use) => {
         const project = createProjectData();
 
         await use(project);
     },
 
     loggedInEmployeesPage: async ({
+        page,
         loginPage,
         employeesPage,
         admin,
     }, use) => {
         await loginPage.goto();
+        await loginPage.expectOpened();
 
-        await loginPage.login(
-            admin.email,
-            admin.password
-        );
+        await Promise.all([
+            page.waitForURL(/employees/, { timeout: 20000 }),
+            loginPage.login(
+                admin.email,
+                admin.password
+            ),
+        ]);
 
         await employeesPage.expectOpened();
 
@@ -68,18 +73,24 @@ export const test = base.extend({
     },
 
     loggedInProjectsPage: async ({
+        page,
         loginPage,
         navbar,
         projectsPage,
         admin,
     }, use) => {
         await loginPage.goto();
+        await loginPage.expectOpened();
 
-        await loginPage.login(
-            admin.email,
-            admin.password
-        );
+        await Promise.all([
+            page.waitForURL(/employees/, { timeout: 20000 }),
+            loginPage.login(
+                admin.email,
+                admin.password
+            ),
+        ]);
 
+        await navbar.expectVisible();
         await navbar.openProjects();
 
         await projectsPage.expectOpened();
