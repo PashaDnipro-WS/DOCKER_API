@@ -6,17 +6,17 @@
 
 # Test info
 
-- Name: projects.spec.js >> Projects >> user can delete project
-- Location: e2e/tests/projects.spec.js:17:5
+- Name: projects.spec.js >> Projects >> user can create project
+- Location: e2e/tests/projects.spec.js:4:5
 
 # Error details
 
 ```
-Test timeout of 30000ms exceeded while setting up "loggedInProjectsPage".
+Test timeout of 60000ms exceeded while setting up "loggedInProjectsPage".
 ```
 
 ```
-Error: locator.click: Test timeout of 30000ms exceeded.
+Error: locator.click: Test timeout of 60000ms exceeded.
 Call log:
   - waiting for getByRole('button', { name: 'Projects' })
 
@@ -84,7 +84,7 @@ Call log:
   29 | 
   30 |   async openProjects() {
 > 31 |     await this.projectsLink.click();
-     |                             ^ Error: locator.click: Test timeout of 30000ms exceeded.
+     |                             ^ Error: locator.click: Test timeout of 60000ms exceeded.
   32 |   }
   33 | 
   34 |   async logout() {
