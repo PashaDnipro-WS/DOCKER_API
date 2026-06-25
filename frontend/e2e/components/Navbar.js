@@ -10,7 +10,7 @@ export class Navbar {
     this.myProfileLink = page.getByRole('button', { name: 'My Profile' });
 
     this.logoutButton = page.getByRole('button', { name: 'Logout' });
-    this.username = page.getByText('admin', { exact: true })
+    this.username = page.getByText('admin', { exact: true });
   }
 
   async expectVisible() {
@@ -21,10 +21,6 @@ export class Navbar {
 
   async expectUserVisible() {
     await expect(this.username).toBeVisible();
-  }
-
-  async logout() {
-    await this.logoutButton.click();
   }
 
   async openProjects() {

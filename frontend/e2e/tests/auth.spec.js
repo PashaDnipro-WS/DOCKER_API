@@ -70,18 +70,20 @@ test.describe('Auth', () => {
     page,
     navbar,
   }) => {
+    await navbar.expectVisible();
 
     await navbar.logout();
 
+    await expect(page).toHaveURL(/login/, { timeout: 15000 });
     await loginPage.expectOpened();
 
-    const token = await page.evaluate(() =>
-      localStorage.getItem('token')
-    );
+    const storage = await page.evaluate(() => ({
+      token: localStorage.getItem('token'),
+      user: localStorage.getItem('user'),
+    }));
 
-    expect(token).toBeNull();
-
-    await page.goto('/employees');
+    expect(storage.token).toBeNull();
+    expect(storage.user).toBeNull();
 
     await loginPage.expectOpened();
   });

@@ -13,6 +13,35 @@ import {
 
 import { createProjectData } from '../data/projects.js';
 
+async function loginByApi(request, admin) {
+    const apiURL = process.env.API_URL || 'http://localhost:3000';
+
+    const response = await request.post(`${apiURL}/login`, {
+        data: {
+            email: admin.email,
+            password: admin.password,
+        },
+    });
+
+    const body = await response.text();
+
+    if (!response.ok()) {
+        throw new Error(`API login failed. Status: ${response.status()}. Body: ${body}`);
+    }
+
+    const data = JSON.parse(body);
+
+    return {
+        token: data.token,
+        user: {
+            email: admin.email,
+            role: 'admin',
+            userId: 1,
+            id: 1,
+        },
+    };
+}
+
 export const test = base.extend({
     loginPage: async ({ page }, use) => {
         await use(new LoginPage(page));
@@ -52,20 +81,18 @@ export const test = base.extend({
 
     loggedInEmployeesPage: async ({
         page,
-        loginPage,
+        request,
         employeesPage,
         admin,
     }, use) => {
-        await loginPage.goto();
-        await loginPage.expectOpened();
+        const { token, user } = await loginByApi(request, admin);
 
-        await Promise.all([
-            page.waitForURL(/employees/, { timeout: 20000 }),
-            loginPage.login(
-                admin.email,
-                admin.password
-            ),
-        ]);
+        await page.addInitScript(({ token, user }) => {
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+        }, { token, user });
+
+        await page.goto('/employees');
 
         await employeesPage.expectOpened();
 
@@ -74,21 +101,19 @@ export const test = base.extend({
 
     loggedInProjectsPage: async ({
         page,
-        loginPage,
+        request,
         navbar,
         projectsPage,
         admin,
     }, use) => {
-        await loginPage.goto();
-        await loginPage.expectOpened();
+        const { token, user } = await loginByApi(request, admin);
 
-        await Promise.all([
-            page.waitForURL(/employees/, { timeout: 20000 }),
-            loginPage.login(
-                admin.email,
-                admin.password
-            ),
-        ]);
+        await page.addInitScript(({ token, user }) => {
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+        }, { token, user });
+
+        await page.goto('/employees');
 
         await navbar.expectVisible();
         await navbar.openProjects();
