@@ -1,3 +1,39 @@
+## Reports and Documentation
+
+Allure test report is available here:
+
+[Allure Report](https://pashadnipro-ws.github.io/DOCKER_API/allure/)
+
+API documentation is available here:
+
+[API Documentation](https://pashadnipro-ws.github.io/DOCKER_API/docs/)
+
+## Available Scripts
+
+### Docker Commands
+
+Run the application in Docker for development:
+
+```bash
+npm run docker:dev
+```
+
+Run API tests in Docker:
+
+```bash
+npm run test:api
+```
+
+Run E2E tests in Docker:
+
+```bash
+npm run test:e2e
+```
+
+## Notes
+
+At the moment, Docker-based tests pass when executed locally from the console, but E2E tests may behave differently in GitHub Actions. This appears to be related to the CI environment and is currently under investigation.
+
 
 # Employee Management System
 
