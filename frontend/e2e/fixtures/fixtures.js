@@ -13,35 +13,6 @@ import {
 
 import { createProjectData } from '../data/projects.js';
 
-async function loginByApi(request, admin) {
-    const baseURL = process.env.BASE_URL || 'http://localhost:5173';
-
-    const response = await request.post(`${baseURL}/api/login`, {
-        data: {
-            email: admin.email,
-            password: admin.password,
-        },
-    });
-
-    const body = await response.text();
-
-    if (!response.ok()) {
-        throw new Error(`API login failed. Status: ${response.status()}. Body: ${body}`);
-    }
-
-    const data = JSON.parse(body);
-
-    return {
-        token: data.token,
-        user: {
-            email: admin.email,
-            role: 'admin',
-            userId: 1,
-            id: 1,
-        },
-    };
-}
-
 export const test = base.extend({
     loginPage: async ({ page }, use) => {
         await use(new LoginPage(page));
@@ -59,40 +30,36 @@ export const test = base.extend({
         await use(new ProjectsPage(page));
     },
 
-    admin: async ({ }, use) => {
+    admin: async ({}, use) => {
         await use(adminUser);
     },
 
-    invalidAdmin: async ({ }, use) => {
+    invalidAdmin: async ({}, use) => {
         await use(invalidAdminUser);
     },
 
-    employee: async ({ }, use) => {
+    employee: async ({}, use) => {
         const employee = createEmployeeData();
-
         await use(employee);
     },
 
-    project: async ({ }, use) => {
+    project: async ({}, use) => {
         const project = createProjectData();
-
         await use(project);
     },
 
     loggedInEmployeesPage: async ({
-        page,
-        request,
+        loginPage,
         employeesPage,
         admin,
     }, use) => {
-        const { token, user } = await loginByApi(request, admin);
+        await loginPage.goto();
+        await loginPage.expectOpened();
 
-        await page.addInitScript(({ token, user }) => {
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
-        }, { token, user });
-
-        await page.goto('/employees');
+        await loginPage.login(
+            admin.email,
+            admin.password
+        );
 
         await employeesPage.expectOpened();
 
@@ -100,22 +67,19 @@ export const test = base.extend({
     },
 
     loggedInProjectsPage: async ({
-        page,
-        request,
+        loginPage,
         navbar,
         projectsPage,
         admin,
     }, use) => {
-        const { token, user } = await loginByApi(request, admin);
+        await loginPage.goto();
+        await loginPage.expectOpened();
 
-        await page.addInitScript(({ token, user }) => {
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
-        }, { token, user });
+        await loginPage.login(
+            admin.email,
+            admin.password
+        );
 
-        await page.goto('/employees');
-
-        await navbar.expectVisible();
         await navbar.openProjects();
 
         await projectsPage.expectOpened();
